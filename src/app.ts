@@ -1,9 +1,9 @@
-import { config } from "dotenv";
+import { configDotenv } from "dotenv";
 import express, { Request, Response } from "express";
 
 const app = express();
 
-config({ path: "./.env" });
+configDotenv({ path: "./.env" });
 
 const port = process.env.PORT || 3000;
 
