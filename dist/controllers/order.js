@@ -1,0 +1,202 @@
+import Order from "../models/order.js";
+import Product from "../models/product.js";
+// Utility Function
+function calcPrices(orderItems) {
+    const itemsPrice = orderItems.reduce((acc, item) => acc + (item.price ?? 0) * item.qty, 0);
+    const shippingPrice = itemsPrice > 100 ? 0 : 10;
+    const taxRate = 0.15;
+    const taxPrice = parseFloat((itemsPrice * taxRate).toFixed(2));
+    const totalPrice = (itemsPrice + shippingPrice + taxPrice).toFixed(2);
+    return {
+        itemsPrice: itemsPrice.toFixed(2),
+        shippingPrice: shippingPrice.toFixed(2),
+        taxPrice: taxPrice.toFixed(2),
+        totalPrice,
+    };
+}
+export const createOrder = async (req, res) => {
+    try {
+        const { orderItems, shippingAddress, paymentMethod } = req.body;
+        if (!orderItems || orderItems.length === 0) {
+            return res.status(400).json({ message: "No order items provided" });
+        }
+        const productIds = orderItems.map((item) => item._id);
+        // Validate product IDs
+        if (productIds.some((id) => !id)) {
+            return res
+                .status(400)
+                .json({ message: "Invalid product ID in order items" });
+        }
+        const itemsFromDB = await Product.find({
+            _id: { $in: productIds },
+        }).exec();
+        if (itemsFromDB.length !== productIds.length) {
+            return res
+                .status(404)
+                .json({ message: "One or more products not found" });
+        }
+        const dbOrderItems = orderItems.map((itemFromClient) => {
+            const matchingItemFromDB = itemsFromDB.find((itemFromDB) => itemFromDB._id.toString() === itemFromClient._id);
+            return {
+                ...itemFromClient,
+                product: matchingItemFromDB._id,
+                price: matchingItemFromDB.price, // Non-null assertion for the price
+            };
+        });
+        const { itemsPrice, taxPrice, shippingPrice, totalPrice } = calcPrices(dbOrderItems);
+        const order = new Order({
+            orderItems: dbOrderItems,
+            user: req.user._id,
+            shippingAddress,
+            paymentMethod,
+            itemsPrice,
+            taxPrice,
+            shippingPrice,
+            totalPrice,
+        });
+        const createdOrder = await order.save();
+        return res
+            .status(201)
+            .json({ createdOrder, message: "Order created successfully" });
+    }
+    catch (error) {
+        console.error("Error creating order:", error);
+        return res
+            .status(500)
+            .json({ message: "Server error, please try again later" });
+    }
+};
+export const getAllOrders = async (req, res) => {
+    try {
+        const orders = await Order.find({}).populate("user", "id username").exec();
+        res.status(200).json({
+            message: "get all orders",
+            orders,
+        });
+    }
+    catch (error) {
+        console.error("Error fetching orders:", error);
+        res.status(500).json({ error: "Server error, please try again later" });
+    }
+};
+export const getUserOrders = async (req, res) => {
+    try {
+        const orders = await Order.find({ user: req.user._id }).exec();
+        if (!orders || orders.length === 0) {
+            res.status(404).json({ message: "No orders found for this user" });
+            return;
+        }
+        res.status(200).json(orders);
+    }
+    catch (error) {
+        console.error("Error fetching user orders:", error);
+        res.status(500).json({ error: "Server error, please try again later" });
+    }
+};
+export const countTotalOrders = async (req, res) => {
+    try {
+        const totalOrders = await Order.countDocuments().exec();
+        res.status(200).json({ totalOrders });
+    }
+    catch (error) {
+        console.error("Error counting total orders:", error);
+        res.status(500).json({ error: "Server error, please try again later" });
+    }
+};
+export const calculateTotalSales = async (req, res) => {
+    try {
+        const orders = await Order.find().select("totalPrice").exec();
+        const totalSales = orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+        res.status(200).json({ totalSales });
+    }
+    catch (error) {
+        console.error("Error calculating total sales:", error);
+        res.status(500).json({ error: "Server error, please try again later" });
+    }
+};
+export const calculateTotalSalesByDate = async (req, res) => {
+    try {
+        const salesByDate = await Order.aggregate([
+            {
+                $match: {
+                    isPaid: true,
+                },
+            },
+            {
+                $group: {
+                    _id: {
+                        $dateToString: { format: "%Y-%m-%d", date: "$paidAt" },
+                    },
+                    totalSales: { $sum: "$totalPrice" },
+                },
+            },
+            {
+                $sort: { _id: 1 }, // Optional: Sort by date ascending
+            },
+        ]);
+        res.status(200).json(salesByDate);
+    }
+    catch (error) {
+        console.error("Error calculating sales by date:", error);
+        res.status(500).json({ error: "Server error, please try again later" });
+    }
+};
+export const findOrderById = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id)
+            .populate("user", "username email")
+            .exec();
+        if (order) {
+            res.status(200).json(order);
+        }
+        else {
+            res.status(404).json({ message: "Order not found" });
+        }
+    }
+    catch (error) {
+        console.error("Error finding order by ID:", error);
+        res.status(500).json({ error: "Server error, please try again later" });
+    }
+};
+export const markOrderAsPaid = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+        if (order) {
+            order.isPaid = true;
+            order.paidAt = new Date();
+            order.paymentResult = {
+                id: req.body.id,
+                status: req.body.status,
+                update_time: req.body.update_time,
+                email_address: req.body.payer.email_address,
+            };
+            const updatedOrder = await order.save();
+            res.status(200).json(updatedOrder);
+        }
+        else {
+            res.status(404).json({ message: "Order not found" });
+        }
+    }
+    catch (error) {
+        console.error("Error marking order as paid:", error);
+        res.status(500).json({ error: "Server error, please try again later" });
+    }
+};
+export const markOrderAsDelivered = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+        if (order) {
+            order.isDelivered = true;
+            order.deliveredAt = new Date();
+            const updatedOrder = await order.save();
+            res.status(200).json(updatedOrder);
+        }
+        else {
+            res.status(404).json({ message: "Order not found" });
+        }
+    }
+    catch (error) {
+        console.error("Error marking order as delivered:", error);
+        res.status(500).json({ error: "Server error, please try again later" });
+    }
+};
