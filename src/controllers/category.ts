@@ -28,7 +28,11 @@ export const createCategory = asyncHandler(
       const category = new Category({ name });
       const savedCategory = await category.save();
 
-      return res.status(201).json({ success: true, category: savedCategory });
+      return res.status(201).json({
+        success: true,
+        category: savedCategory,
+        message: "Category created",
+      });
     } catch (error: unknown) {
       console.error("Error creating category:", error);
       return res.status(500).json({
@@ -73,7 +77,13 @@ export const updateCategory = asyncHandler(
       console.log("Category updated:", updatedCategory);
 
       // Respond with the updated category
-      return res.status(200).json({ success: true, category: updatedCategory });
+      return res
+        .status(200)
+        .json({
+          success: true,
+          category: updatedCategory,
+          message: " category updated successfully",
+        });
     } catch (error: unknown) {
       console.error("Error updating category:", error);
       return res.status(500).json({

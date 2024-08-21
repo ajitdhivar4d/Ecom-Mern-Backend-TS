@@ -18,14 +18,16 @@ export const createOrder = async (req, res) => {
     try {
         const { orderItems, shippingAddress, paymentMethod } = req.body;
         if (!orderItems || orderItems.length === 0) {
-            return res.status(400).json({ message: "No order items provided" });
+            return res
+                .status(400)
+                .json({ success: false, message: "No order items provided" });
         }
         const productIds = orderItems.map((item) => item._id);
         // Validate product IDs
         if (productIds.some((id) => !id)) {
             return res
                 .status(400)
-                .json({ message: "Invalid product ID in order items" });
+                .json({ success: false, message: "Invalid product ID in order items" });
         }
         const itemsFromDB = await Product.find({
             _id: { $in: productIds },
@@ -33,7 +35,7 @@ export const createOrder = async (req, res) => {
         if (itemsFromDB.length !== productIds.length) {
             return res
                 .status(404)
-                .json({ message: "One or more products not found" });
+                .json({ success: false, message: "One or more products not found" });
         }
         const dbOrderItems = orderItems.map((itemFromClient) => {
             const matchingItemFromDB = itemsFromDB.find((itemFromDB) => itemFromDB._id.toString() === itemFromClient._id);
@@ -55,59 +57,85 @@ export const createOrder = async (req, res) => {
             totalPrice,
         });
         const createdOrder = await order.save();
-        return res
-            .status(201)
-            .json({ createdOrder, message: "Order created successfully" });
+        return res.status(201).json({
+            success: true,
+            order: createdOrder,
+            message: "Order created successfully",
+        });
     }
     catch (error) {
         console.error("Error creating order:", error);
-        return res
-            .status(500)
-            .json({ message: "Server error, please try again later" });
+        return res.status(500).json({
+            success: false,
+            message: "Server error, please try again later",
+        });
     }
 };
 export const getAllOrders = async (req, res) => {
     try {
         const orders = await Order.find({}).populate("user", "id username").exec();
         res.status(200).json({
-            message: "get all orders",
+            success: true,
             orders,
+            message: "get all orders",
         });
     }
     catch (error) {
         console.error("Error fetching orders:", error);
-        res.status(500).json({ error: "Server error, please try again later" });
+        res.status(500).json({
+            success: false,
+            message: "Server error, please try again later",
+        });
     }
 };
 export const getUserOrders = async (req, res) => {
     try {
         const orders = await Order.find({ user: req.user._id }).exec();
         if (!orders || orders.length === 0) {
-            res.status(404).json({ message: "No orders found for this user" });
+            res
+                .status(404)
+                .json({ success: false, message: "No orders found for this user" });
             return;
         }
-        res.status(200).json(orders);
+        res.status(200).json({
+            success: true,
+            orders,
+            message: "Fetch all My Orders",
+        });
     }
     catch (error) {
         console.error("Error fetching user orders:", error);
-        res.status(500).json({ error: "Server error, please try again later" });
+        res
+            .status(500)
+            .json({ success: true, message: "Server error, please try again later" });
     }
 };
 export const countTotalOrders = async (req, res) => {
     try {
         const totalOrders = await Order.countDocuments().exec();
-        res.status(200).json({ totalOrders });
+        res.status(200).json({
+            success: true,
+            totalOrders,
+            message: "Total Count Documents",
+        });
     }
     catch (error) {
         console.error("Error counting total orders:", error);
-        res.status(500).json({ error: "Server error, please try again later" });
+        res.status(500).json({
+            success: false,
+            message: "Server error, please try again later",
+        });
     }
 };
 export const calculateTotalSales = async (req, res) => {
     try {
         const orders = await Order.find().select("totalPrice").exec();
         const totalSales = orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
-        res.status(200).json({ totalSales });
+        res.status(200).json({
+            success: true,
+            totalSales,
+            message: "Total Sales",
+        });
     }
     catch (error) {
         console.error("Error calculating total sales:", error);
@@ -134,11 +162,20 @@ export const calculateTotalSalesByDate = async (req, res) => {
                 $sort: { _id: 1 }, // Optional: Sort by date ascending
             },
         ]);
-        res.status(200).json(salesByDate);
+        res.status(200).json({
+            success: true,
+            salesByDate,
+            message: "Sales by date",
+        });
     }
     catch (error) {
         console.error("Error calculating sales by date:", error);
-        res.status(500).json({ error: "Server error, please try again later" });
+        res
+            .status(500)
+            .json({
+            success: false,
+            message: "Server error, please try again later",
+        });
     }
 };
 export const findOrderById = async (req, res) => {
@@ -147,15 +184,22 @@ export const findOrderById = async (req, res) => {
             .populate("user", "username email")
             .exec();
         if (order) {
-            res.status(200).json(order);
+            res.status(200).json({
+                success: true,
+                order,
+                message: "Order Fetched Successfully",
+            });
         }
         else {
-            res.status(404).json({ message: "Order not found" });
+            res.status(404).json({ success: false, message: "Order not found" });
         }
     }
     catch (error) {
         console.error("Error finding order by ID:", error);
-        res.status(500).json({ error: "Server error, please try again later" });
+        res.status(500).json({
+            success: false,
+            message: "Server error, please try again later",
+        });
     }
 };
 export const markOrderAsPaid = async (req, res) => {
@@ -189,14 +233,21 @@ export const markOrderAsDelivered = async (req, res) => {
             order.isDelivered = true;
             order.deliveredAt = new Date();
             const updatedOrder = await order.save();
-            res.status(200).json(updatedOrder);
+            res.status(200).json({
+                success: true,
+                order: updatedOrder,
+                message: "Order marked as delivered successfully",
+            });
         }
         else {
-            res.status(404).json({ message: "Order not found" });
+            res.status(404).json({ success: false, message: "Order not found" });
         }
     }
     catch (error) {
         console.error("Error marking order as delivered:", error);
-        res.status(500).json({ error: "Server error, please try again later" });
+        res.status(500).json({
+            success: false,
+            message: "Server error, please try again later",
+        });
     }
 };

@@ -74,6 +74,7 @@ export const loginUser = asyncHandler(async (req, res) => {
                 email: existingUser.email,
                 isAdmin: existingUser.isAdmin,
             },
+            message: "User logged in successfully",
         });
     }
     catch (error) {
@@ -140,6 +141,7 @@ export const getAllUsers = asyncHandler(async (req, res) => {
         return res.status(200).json({
             success: true,
             users,
+            message: "Users fetched successfully",
         });
     }
     catch (error) {
@@ -176,6 +178,7 @@ export const updateCurrentUserProfile = asyncHandler(async (req, res) => {
                 email: updatedUser.email,
                 isAdmin: updatedUser.isAdmin,
             },
+            message: "User profile updated successfully",
         });
     }
     catch (error) {
@@ -265,6 +268,7 @@ export const updateUserById = asyncHandler(async (req, res) => {
                 email: updatedUser.email,
                 isAdmin: updatedUser.isAdmin,
             },
+            message: "User updated successfully",
         });
     }
     catch (error) {

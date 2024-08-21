@@ -28,6 +28,7 @@ export const fetchProducts = asyncHandler(
         page,
         pages: Math.ceil(count / pageSize),
         hasMore: page * pageSize < count,
+        message: "Fetched products ",
       });
     } catch (error: unknown) {
       console.error("Error fetching products:", error);
@@ -51,6 +52,7 @@ export const fetchAllProducts = asyncHandler(
       res.status(200).json({
         success: true,
         products,
+        message: "Fetched all Products",
       });
     } catch (error: unknown) {
       console.error("Error fetching products:", error);
@@ -71,6 +73,7 @@ export const fetchTopProducts = asyncHandler(
       res.status(200).json({
         success: true,
         products: topProducts,
+        message: "Fetched top products",
       });
     } catch (error: unknown) {
       console.error("Error fetching top products:", error);
@@ -91,6 +94,7 @@ export const fetchNewProducts = asyncHandler(
       res.status(200).json({
         success: true,
         products: newProducts,
+        message: "Fetched products",
       });
     } catch (error: unknown) {
       console.error("Error fetching new products:", error);
@@ -136,48 +140,6 @@ export const fetchProductById = asyncHandler(
     }
   },
 );
-
-// Add a new product (commented out for now, but organized for potential use)
-// export const addProduct = asyncHandler(async (req: Request, res: Response) => {
-//   try {
-//     const { name, description, price, category, quantity, brand, image } =
-//       req.body;
-
-//     if (
-//       !name ||
-//       !description ||
-//       !price ||
-//       !category ||
-//       !quantity ||
-//       !brand ||
-//       !image
-//     ) {
-//       return res.status(400).json({ error: "All fields are required" });
-//     }
-
-//     const product = new Product({
-//       name,
-//       description,
-//       price,
-//       category,
-//       quantity,
-//       brand,
-//       image,
-//     });
-
-//     const savedProduct = await product.save();
-//     res.status(201).json({
-//       success: true,
-//       product: savedProduct,
-//     });
-//   } catch (error: unknown) {
-//     console.error("Error adding product:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "An error occurred while adding the product",
-//     });
-//   }
-// });
 
 // Remove a product by ID
 export const removeProduct = asyncHandler(
@@ -228,6 +190,7 @@ export const filterProducts = asyncHandler(
       const query: Record<string, any> = {};
       if (Array.isArray(checked) && checked.length > 0)
         query.category = { $in: checked };
+
       if (Array.isArray(radio) && radio.length === 2)
         query.price = { $gte: radio[0], $lte: radio[1] };
 

@@ -20,6 +20,7 @@ export const fetchProducts = asyncHandler(async (req, res) => {
             page,
             pages: Math.ceil(count / pageSize),
             hasMore: page * pageSize < count,
+            message: "Fetched products ",
         });
     }
     catch (error) {
@@ -40,6 +41,7 @@ export const fetchAllProducts = asyncHandler(async (req, res) => {
         res.status(200).json({
             success: true,
             products,
+            message: "Fetched all Products",
         });
     }
     catch (error) {
@@ -57,6 +59,7 @@ export const fetchTopProducts = asyncHandler(async (req, res) => {
         res.status(200).json({
             success: true,
             products: topProducts,
+            message: "Fetched top products",
         });
     }
     catch (error) {
@@ -74,6 +77,7 @@ export const fetchNewProducts = asyncHandler(async (req, res) => {
         res.status(200).json({
             success: true,
             products: newProducts,
+            message: "Fetched products",
         });
     }
     catch (error) {
@@ -113,44 +117,6 @@ export const fetchProductById = asyncHandler(async (req, res, next) => {
         next(error);
     }
 });
-// Add a new product (commented out for now, but organized for potential use)
-// export const addProduct = asyncHandler(async (req: Request, res: Response) => {
-//   try {
-//     const { name, description, price, category, quantity, brand, image } =
-//       req.body;
-//     if (
-//       !name ||
-//       !description ||
-//       !price ||
-//       !category ||
-//       !quantity ||
-//       !brand ||
-//       !image
-//     ) {
-//       return res.status(400).json({ error: "All fields are required" });
-//     }
-//     const product = new Product({
-//       name,
-//       description,
-//       price,
-//       category,
-//       quantity,
-//       brand,
-//       image,
-//     });
-//     const savedProduct = await product.save();
-//     res.status(201).json({
-//       success: true,
-//       product: savedProduct,
-//     });
-//   } catch (error: unknown) {
-//     console.error("Error adding product:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "An error occurred while adding the product",
-//     });
-//   }
-// });
 // Remove a product by ID
 export const removeProduct = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
