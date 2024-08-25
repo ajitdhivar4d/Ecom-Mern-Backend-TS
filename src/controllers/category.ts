@@ -77,13 +77,11 @@ export const updateCategory = asyncHandler(
       console.log("Category updated:", updatedCategory);
 
       // Respond with the updated category
-      return res
-        .status(200)
-        .json({
-          success: true,
-          category: updatedCategory,
-          message: " category updated successfully",
-        });
+      return res.status(200).json({
+        success: true,
+        category: updatedCategory,
+        message: " category updated successfully",
+      });
     } catch (error: unknown) {
       console.error("Error updating category:", error);
       return res.status(500).json({

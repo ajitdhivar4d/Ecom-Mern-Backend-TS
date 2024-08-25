@@ -60,9 +60,7 @@ export const updateCategory = asyncHandler(async (req, res) => {
         // Log the updated category for debugging
         console.log("Category updated:", updatedCategory);
         // Respond with the updated category
-        return res
-            .status(200)
-            .json({
+        return res.status(200).json({
             success: true,
             category: updatedCategory,
             message: " category updated successfully",

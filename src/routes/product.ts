@@ -6,6 +6,7 @@ import {
   fetchProductById,
   fetchProducts,
   fetchTopProducts,
+  filterProducts,
   removeProduct,
 } from "../controllers/product.js";
 import checkId from "../middlewares/checkId.js";
@@ -24,13 +25,15 @@ router.route("/").get(fetchProducts);
 //Route - http://localhost:5000/api/products/allproducts
 router.route("/allproducts").get(fetchAllProducts);
 
-router.route("/:id/reviews").post(authenticate, checkId, addProductReviews);
-
 //Route - http://localhost:5000/api/products/top
 router.get("/top", fetchTopProducts);
 
 //Route - http://localhost:5000/api/products/new
 router.get("/new", fetchNewProducts);
+
+router.route("/filtered-products").post(filterProducts);
+
+router.route("/:id/reviews").post(authenticate, checkId, addProductReviews);
 
 //Route - http://localhost:5000/api/products/:id
 router
@@ -38,7 +41,5 @@ router
   .get(fetchProductById)
   .delete(authenticate, authorizeAdmin, checkId, removeProduct);
 //   .put(authenticate, authorizeAdmin, formidable(), updateProductDetails)
-
-// router.route("/filtered-products").post(filterProducts);
 
 export default router;

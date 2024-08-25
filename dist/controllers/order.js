@@ -41,7 +41,7 @@ export const createOrder = async (req, res) => {
             const matchingItemFromDB = itemsFromDB.find((itemFromDB) => itemFromDB._id.toString() === itemFromClient._id);
             return {
                 ...itemFromClient,
-                product: matchingItemFromDB._id,
+                product: matchingItemFromDB._id, // Non-null assertion because we know the product exists
                 price: matchingItemFromDB.price, // Non-null assertion for the price
             };
         });

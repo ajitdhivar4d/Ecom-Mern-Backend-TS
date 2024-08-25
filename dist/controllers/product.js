@@ -95,7 +95,7 @@ export const fetchProductById = asyncHandler(async (req, res, next) => {
         return res.status(400).json({
             status: "error",
             message: "Invalid product ID",
-            data: null,
+            product: null,
         });
     }
     try {
@@ -104,13 +104,13 @@ export const fetchProductById = asyncHandler(async (req, res, next) => {
             return res.status(404).json({
                 status: "error",
                 message: "Product not found",
-                data: null,
+                product: null,
             });
         }
         res.status(200).json({
             status: "success",
             message: "Product fetched successfully",
-            data: product,
+            product,
         });
     }
     catch (error) {
@@ -160,7 +160,10 @@ export const filterProducts = asyncHandler(async (req, res, next) => {
             query.category = { $in: checked };
         if (Array.isArray(radio) && radio.length === 2)
             query.price = { $gte: radio[0], $lte: radio[1] };
-        const products = await Product.find(query);
+        // If no filters are applied, fetch all products
+        const products = Object.keys(query).length > 0
+            ? await Product.find(query)
+            : await Product.find();
         res.status(200).json({
             status: "success",
             message: "Products filtered successfully",
