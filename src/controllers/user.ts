@@ -46,7 +46,7 @@ export const createUser = asyncHandler(
 
     try {
       await newUser.save();
-      createToken(res, newUser._id);
+      createToken(res, newUser.id);
 
       return res.status(201).json({
         success: true,
@@ -93,7 +93,7 @@ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
       });
     }
 
-    createToken(res, existingUser._id);
+    createToken(res, existingUser.id);
 
     return res.status(200).json({
       success: true,

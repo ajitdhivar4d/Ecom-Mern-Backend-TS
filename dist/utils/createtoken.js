@@ -10,15 +10,15 @@ const generateToken = (res, userId) => {
             expiresIn: "30d",
         });
         // Set JWT as an HTTP-only cookie
-        return res.cookie("jwt", token, {
+        res.cookie("jwt", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV !== "development",
-            sameSite: "strict",
+            secure: process.env.NODE_ENV === "PRODUCTION",
+            sameSite: "none",
             maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         });
     }
     catch (error) {
-        console.error("Error generating token:", error);
+        console.error("Error generating token:", error instanceof Error ? error.message : error);
         throw error;
     }
 };

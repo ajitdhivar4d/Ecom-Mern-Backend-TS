@@ -27,7 +27,7 @@ export const createUser = asyncHandler(async (req, res, next) => {
     const newUser = new User({ username, email, password: hashedPassword });
     try {
         await newUser.save();
-        createToken(res, newUser._id);
+        createToken(res, newUser.id);
         return res.status(201).json({
             success: true,
             user: {
@@ -65,7 +65,7 @@ export const loginUser = asyncHandler(async (req, res) => {
                 message: "Invalid email or password",
             });
         }
-        createToken(res, existingUser._id);
+        createToken(res, existingUser.id);
         return res.status(200).json({
             success: true,
             user: {
